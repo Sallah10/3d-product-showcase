@@ -1,0 +1,11 @@
+Model Information:
+* title:	Blue Hills
+* source:	https://sketchfab.com/3d-models/blue-hills-67e0219a77f0419fb104cd510fd14db4
+* author:	Coop2wavvy (https://sketchfab.com/Coop2wavvy)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Blue Hills" (https://sketchfab.com/3d-models/blue-hills-67e0219a77f0419fb104cd510fd14db4) by Coop2wavvy (https://sketchfab.com/Coop2wavvy) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

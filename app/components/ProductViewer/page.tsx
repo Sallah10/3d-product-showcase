@@ -41,7 +41,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({ modelPath }) => {
             0.1,
             1000
         );
-        camera.position.z = 5;
+        camera.position.z = 2;
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -75,7 +75,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({ modelPath }) => {
                 const center = new THREE.Vector3();
                 box.getCenter(center);
                 model.position.sub(center);
-                const scaleFactor = 5.0; // Adjust this value to make it bigger or smaller
+                const scaleFactor = 2.0; // Adjust this value to make it bigger or smaller
                 model.scale.set(scaleFactor, scaleFactor, scaleFactor);
                 // Add the model to our scene
                 scene.add(model);

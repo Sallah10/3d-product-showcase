@@ -15,12 +15,12 @@ export const products: Product[] = [
     id: 1,
     title: "Air Sneaker Pro",
     description: "Premium running shoes with nano-cushion",
-    modelPath: "/models/red_sneakers/scene.gltf"
+    modelPath: '/models/red_snickers/scene.gltf'
   },
   {
     id: 2,
     title: "Sport Watch X",
     description: "Waterproof smartwatch with heart monitor",
-    modelPath: "/models/blue_hills/scene.gltf"
+    modelPath: '/models/blue_hills/scene.gltf'
   }
 ];

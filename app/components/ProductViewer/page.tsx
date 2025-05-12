@@ -1,13 +1,33 @@
-import React, { useEffect, useRef } from 'react';
+"use client"
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTF } from 'three/addons/loaders/GLTFLoader.js';
+import { motion } from 'framer-motion';
 
-const ProductViewer: React.FC = () => {
+
+
+
+interface ProductViewerProps {
+    modelPath: string;
+}
+
+const ProductViewer: React.FC<ProductViewerProps> = ({ modelPath }) => {
     // Specify the type of the ref as HTMLDivElement
     const mountRef = useRef<HTMLDivElement | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    // const [activeFeature, setActiveFeature] = useState<string | null>(null);
+
+    // const features = [
+    //     { id: 'feature1', name: 'Premium Materials', description: 'Made with high-quality sustainable materials' },
+    //     { id: 'feature2', name: 'Ergonomic Design', description: 'Crafted for maximum comfort and usability' },
+    //     { id: 'feature3', name: 'Smart Technology', description: 'Embedded sensors for enhanced performance' },
+    // ];
 
     useEffect(() => {
+
+        setTimeout(() => setIsLoading(false), 1500);
+
         // Make sure mountRef is available
         if (!mountRef.current) return;
 
@@ -41,11 +61,12 @@ const ProductViewer: React.FC = () => {
 
         // STEP 3: LOAD A 3D MODEL
         let model: THREE.Group | undefined;
+        // scene.children = scene.children.filter(child => child.type !== 'Group');
         const loader = new GLTFLoader();
-
         // Path is relative to the public folder
         loader.load(
-            '/models/scene.gltf',
+            // '/models/red_snickers/scene.gltf'
+            modelPath,
             (gltf: GLTF) => {
                 model = gltf.scene;
 
@@ -54,14 +75,15 @@ const ProductViewer: React.FC = () => {
                 const center = new THREE.Vector3();
                 box.getCenter(center);
                 model.position.sub(center);
-
+                const scaleFactor = 5.0; // Adjust this value to make it bigger or smaller
+                model.scale.set(scaleFactor, scaleFactor, scaleFactor);
                 // Add the model to our scene
                 scene.add(model);
             },
             (progress: { loaded: number; total: number }) => {
                 console.log('Loading progress: ', (progress.loaded / progress.total) * 100, '%');
             },
-            (error: Error) => {
+            (error) => {
                 console.error('Error loading model:', error);
             }
         );
@@ -127,27 +149,101 @@ const ProductViewer: React.FC = () => {
 
         // Handle window resizing
         const handleResize = () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            if (!mountRef.current) return;
+            // camera.aspect = window.innerWidth / window.innerHeight;
+            camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+            // renderer.setSize(window.innerWidth, window.innerHeight);
         };
 
         window.addEventListener('resize', handleResize);
-
+        const currentMountRef = mountRef.current;
         // Cleanup function
         return () => {
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('mousedown', handleMouseDown);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
-            if (mountRef.current && renderer.domElement) {
-                mountRef.current.removeChild(renderer.domElement);
+            if (currentMountRef && renderer.domElement) {
+                currentMountRef.removeChild(renderer.domElement);
             }
         };
-    }, []);
+    }, [modelPath]);
 
     return (
-        <div ref={mountRef} style={{ width: '100%', height: '100vh' }} />
+        <div className='w-full' >
+            <header className="w-full py-6 px-4 bg-white shadow-md">
+                <motion.h1
+                    className="text-3xl font-bold text-center text-indigo-800"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    3D Product Showcase
+                </motion.h1>
+            </header>
+            {/* // <div ref={mountRef} style={{ width: '100%', height: '100vh' }} /> */}
+            <motion.div
+                className=" lg:w-[500px] md:w-2/3 aspect-square rounded-lg shadow-lg overflow-hidden relative mt-10 mx-auto"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                ref={mountRef}
+            >
+                {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
+                        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                )}
+            </motion.div>
+
+            {/* Product info md:w-1/3 */}
+            {/* <div className="w-full  mt-10 flex flex-col items-center justify-center px-10 self-center">
+                <motion.h2
+                    className="text-2xl font-bold text-indigo-700 mb-4 "
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                    Premium Smart Watch
+                </motion.h2>
+
+                <motion.p
+                    className="text-gray-600 mb-6 text-justify w-[500px]"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                >
+                    Experience the perfect blend of style and technology with our latest smart watch. Rotate the model to explore all angles.
+                </motion.p> */}
+
+            {/* Feature list */}
+            {/* <ul className="space-y-4">
+                    {features.map((feature, index) => (
+                        <motion.li
+                            key={feature.id}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: 0.6 + (index * 0.1) }}
+                            onMouseEnter={() => setActiveFeature(feature.id)}
+                            onMouseLeave={() => setActiveFeature(null)}
+                            className="cursor-pointer"
+                        >
+                            <motion.div
+                                className={`p-4 rounded-lg transition-all ${activeFeature === feature.id ? 'bg-indigo-100' : 'bg-white'}`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <h3 className="font-bold text-indigo-600">{feature.name}</h3>
+                                <p className="text-gray-600 text-sm">{feature.description}</p>
+                            </motion.div>
+                        </motion.li>
+                    ))}
+                </ul> */}
+            {/* </div> */}
+
+        </div>
     );
 };
 

@@ -2,6 +2,7 @@ interface Product {
   id: number;
   title: string;
   description: string;
+  price : string;
   modelPath: string;
 }
 //   const features = [
@@ -15,12 +16,14 @@ export const products: Product[] = [
     id: 1,
     title: "Air Sneaker Pro",
     description: "Premium running shoes with nano-cushion",
+    price: "$188.99",
     modelPath: '/models/red_snickers/scene.gltf'
   },
   {
     id: 2,
     title: "Sport Watch X",
     description: "Waterproof smartwatch with heart monitor",
-    modelPath: '/models/blue_hills/scene.gltf'
+    price: "$148.99",
+    modelPath: '/models/sport_watch/scene.gltf'
   }
 ];

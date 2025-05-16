@@ -35,7 +35,7 @@ const Main = () => {
     };
 
     return (
-        <div className="flex flex-col items-center w-full bg-gradient-to-b from-blue-50 to-indigo-100 min-h-screen overflow-hidden relative">
+        <div className="flex flex-col items-center w-full bg-gradient-to-b from-blue-50 to-indigo-100 min-h-screen relative">
             <header className="w-full py-6 px-4 bg-white shadow-md">
                 <motion.h1
                     className="text-3xl font-bold text-center text-indigo-800"
@@ -48,7 +48,7 @@ const Main = () => {
             </header>
 
             {/* Main Content Container */}
-            <div className="flex flex-col items-center w-full max-w-6xl px-4 pb-20">
+            <div className="flex flex-col items-center w-full max-w-6xl px-4 pb-20 min-h-screen">
                 {/* Product Viewer with Loading State */}
                 <div className="relative w-full lg:w-[500px] aspect-square rounded-lg shadow-lg bg-white overflow-hidden mt-10">
                     <ProductViewer

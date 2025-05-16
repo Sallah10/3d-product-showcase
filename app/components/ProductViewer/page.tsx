@@ -158,7 +158,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({ modelPath, onLoaded }) =>
     return (
         <div className='relative'>
             <motion.div
-                className="lg:w-[500px] md:w-2/3 aspect-square rounded-lg shadow-lg overflow-hidden relative mt-10 mx-auto"
+                className="lg:w-[500px] md:w-2/3 aspect-square rounded-lg shadow-lg relative mt-10 mx-auto"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}

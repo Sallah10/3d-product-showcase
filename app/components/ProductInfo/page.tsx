@@ -22,7 +22,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ title, description, price }) 
                 {/* <h2 className="font-bold text-lg text-indigo-600">{title}</h2>
                 
                 <p className="text-gray-600 text-sm">{description}</p> */}
-                <h2 className="font-bold text-lg text-indigo-600">{title}</h2>
+                <h2 className="text-xl font-bold hover:text-blue-600  text-indigo-600">{title}</h2>
                 <div className="flex items-center justify-between mt-2">
                     <p className="text-xl text-blue-600 font-semibold">{price}</p>
                     <div className="flex items-center justify-start ml-auto">

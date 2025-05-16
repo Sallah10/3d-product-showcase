@@ -8,9 +8,10 @@ import { motion } from 'framer-motion';
 interface ProductViewerProps {
     modelPath: string;
     title: string;
+    onLoaded?: () => void; // Callback when model loads
 }
 // , title
-const ProductViewer: React.FC<ProductViewerProps> = ({ modelPath }) => {
+const ProductViewer: React.FC<ProductViewerProps> = ({ modelPath, onLoaded }) => {
     const mountRef = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -53,6 +54,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({ modelPath }) => {
         loader.load(
             modelPath,
             (gltf: GLTF) => {
+                if (onLoaded) onLoaded();
                 model = gltf.scene;
 
                 // Calculate bounding box and scale uniformly
@@ -151,7 +153,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({ modelPath }) => {
             }
             renderer.dispose();
         };
-    }, [modelPath]);
+    }, [modelPath, onLoaded]);
 
     return (
         <div className='relative'>

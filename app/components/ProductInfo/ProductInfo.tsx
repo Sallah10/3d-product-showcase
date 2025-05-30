@@ -43,4 +43,4 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ title, description, price }) 
     )
 }
 
-export default ProductInfo
+export default ProductInfo;

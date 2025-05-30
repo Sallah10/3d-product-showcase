@@ -1,8 +1,8 @@
 "use client"
 import React, { useState } from "react";
-import ProductViewer from "../ProductViewer/page";
+import ProductViewer from "../ProductViewer/ProductViewer";
 import { products } from '@/app/data/product';
-import ProductInfo from "../ProductInfo/page";
+import ProductInfo from "../ProductInfo/ProductInfo";
 import { motion } from "framer-motion";
 import {
     ChevronLeft,

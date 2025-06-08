@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/lodash.debounce": "^4.0.9",
     "framer-motion": "^12.15.0",
+    "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.510.0",
     "next": "15.3.2",
     "react": "^19.0.0",

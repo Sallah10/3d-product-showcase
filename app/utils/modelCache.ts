@@ -1,12 +1,31 @@
-// utils/modelCache.ts
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+// app/utils/modelCache.ts
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
 const modelCache = new Map<string, THREE.Group>();
+
 const loader = new GLTFLoader();
 
-export const getCachedModel = async (modelPath: string): Promise<THREE.Group> => {
+// Set up the DRACO Loader for highly optimized 3D model compression
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath(
+  "https://www.gstatic.com/draco/versioned/decoders/1.5.6/",
+);
+loader.setDRACOLoader(dracoLoader);
+
+export const getCachedModel = async (
+  modelPath: string,
+  onProgress?: (event: ProgressEvent) => void,
+): Promise<THREE.Group> => {
   if (modelCache.has(modelPath)) {
+    if (onProgress) {
+      onProgress({
+        loaded: 100,
+        total: 100,
+        lengthComputable: true,
+      } as ProgressEvent);
+    }
     return modelCache.get(modelPath)!.clone();
   }
 
@@ -18,8 +37,11 @@ export const getCachedModel = async (modelPath: string): Promise<THREE.Group> =>
         modelCache.set(modelPath, model);
         resolve(model.clone());
       },
-      undefined,
-      (error) => reject(error)
+      onProgress,
+      (error) => {
+        console.error("Error loading model:", error);
+        reject(error);
+      },
     );
   });
 };

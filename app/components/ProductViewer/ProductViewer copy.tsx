@@ -2,9 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { motion } from "framer-motion";
-import { getCachedModel } from "@/app/utils/modelCache";
+import { getCachedModel } from "@/app/utils/modelCache"; // Use the shared cache
 
 interface ProductViewerProps {
   modelPath: string;
@@ -47,32 +46,35 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
       alpha: true,
       powerPreference: "high-performance",
     });
-    rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimization for high-res screens
     rendererRef.current.setSize(
       mountRef.current.clientWidth,
       mountRef.current.clientHeight,
     );
-    rendererRef.current.toneMapping = THREE.ACESFilmicToneMapping; // Cinematic color grading
-    rendererRef.current.toneMappingExposure = 1.0;
     mountRef.current.appendChild(rendererRef.current.domElement);
 
-    // Professional Studio Lighting (RoomEnvironment)
-    const pmremGenerator = new THREE.PMREMGenerator(rendererRef.current);
-    sceneRef.current.environment = pmremGenerator.fromScene(
-      new RoomEnvironment(),
-      0.04,
-    ).texture;
-    pmremGenerator.dispose();
-
+    // OrbitControls - FIXES MOBILE TOUCH AND MOUSE DRAGGING!
     controlsRef.current = new OrbitControls(
       cameraRef.current,
       rendererRef.current.domElement,
     );
-    controlsRef.current.enableDamping = true;
+    controlsRef.current.enableDamping = true; // Smooth physics
     controlsRef.current.dampingFactor = 0.05;
-    controlsRef.current.autoRotate = true;
+    controlsRef.current.autoRotate = true; // Replaces manual rotation
     controlsRef.current.autoRotateSpeed = 2.0;
-    controlsRef.current.enableZoom = false; // Prevents annoying page scroll on mobile
+    controlsRef.current.enableZoom = false; // Prevents annoying page scrolling on mobile
+
+    // Professional Lighting Setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    sceneRef.current.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    mainLight.position.set(5, 5, 5);
+    sceneRef.current.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0xe0eaff, 0.4); // Slight blue tint for aesthetics
+    fillLight.position.set(-5, 0, -5);
+    sceneRef.current.add(fillLight);
   };
 
   const loadModel = async () => {
@@ -80,23 +82,27 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
 
     try {
       const model = await getCachedModel(modelPath, (xhr) => {
+        // FIXED COUNTING MATH: Handle cases where total is 0
         if (xhr.lengthComputable && xhr.total > 0) {
           setLoadProgress((xhr.loaded / xhr.total) * 100);
         } else {
+          // Fallback if server doesn't provide file size
           setLoadProgress((prev) => Math.min(prev + 5, 95));
         }
       });
 
+      // Remove existing model to prevent overlaps
       if (modelRef.current) {
         sceneRef.current.remove(modelRef.current);
       }
 
+      // Calculate optimal scale and center it
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
 
       const maxDim = Math.max(size.x, size.y, size.z);
-      const scaleFactor = 2.5 / maxDim;
+      const scaleFactor = 2.5 / maxDim; // Adjusted slightly for better framing
       model.scale.setScalar(scaleFactor);
       model.position.sub(center.multiplyScalar(scaleFactor));
 
@@ -114,7 +120,9 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
   const animate = () => {
     if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
 
-    if (controlsRef.current) controlsRef.current.update();
+    if (controlsRef.current) {
+      controlsRef.current.update(); // Required for damping and autoRotate
+    }
 
     rendererRef.current.render(sceneRef.current, cameraRef.current);
     animationRef.current = requestAnimationFrame(animate);
@@ -122,6 +130,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
 
   const handleResize = () => {
     if (!mountRef.current || !cameraRef.current || !rendererRef.current) return;
+
     const width = mountRef.current.clientWidth;
     const height = mountRef.current.clientHeight;
 
@@ -139,6 +148,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
       window.removeEventListener("resize", handleResize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
 
+      // PROPER MEMORY DISPOSAL (Crucial for Hirable Portfolios)
       if (sceneRef.current) {
         sceneRef.current.traverse((object) => {
           if (object instanceof THREE.Mesh) {
@@ -166,6 +176,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Reload model when modelPath changes
   useEffect(() => {
     if (sceneRef.current) {
       setIsLoading(true);

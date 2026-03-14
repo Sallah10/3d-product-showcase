@@ -2,7 +2,7 @@ interface Product {
   id: number;
   title: string;
   description: string;
-  price : string;
+  price: string;
   modelPath: string;
 }
 //   const features = [
@@ -17,13 +17,20 @@ export const products: Product[] = [
     title: "Air Sneaker Pro",
     description: "Premium running shoes with nano-cushion",
     price: "$188.99",
-    modelPath: '/models/red_snickers/scene.gltf'
+    modelPath: "/models/red_snickers/scene.gltf",
   },
   {
     id: 2,
     title: "Sport Watch X",
     description: "Waterproof smartwatch with heart monitor",
     price: "$148.99",
-    modelPath: '/models/sport_watch/scene.gltf'
-  }
+    modelPath: "/models/sport_watch/scene.gltf",
+  },
+  {
+    id: 3,
+    title: "Blue Hills",
+    description: "Stylish  shoe for all seasons party",
+    price: "$129.99",
+    modelPath: "/models/blue_hills/scene.gltf",
+  },
 ];

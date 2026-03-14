@@ -81,9 +81,15 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
     try {
       const model = await getCachedModel(modelPath, (xhr) => {
         if (xhr.lengthComputable && xhr.total > 0) {
-          setLoadProgress((xhr.loaded / xhr.total) * 100);
+          //   setLoadProgress((xhr.loaded / xhr.total) * 100);
+          const percentComplete = (xhr.loaded / xhr.total) * 100;
+          if (percentComplete > 100) {
+            setLoadProgress(99);
+          } else {
+            setLoadProgress(percentComplete);
+          }
         } else {
-          setLoadProgress((prev) => Math.min(prev + 5, 95));
+          setLoadProgress((prev) => Math.min(prev + 5, 99));
         }
       });
 

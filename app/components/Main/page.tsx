@@ -40,9 +40,50 @@ const Main = () => {
 
   // NEW: Toast Notification State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  // NEW: Like/Favorite State
+  const [likedProducts, setLikedProducts] = useState<Set<number>>(new Set());
 
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
   const decrementQuantity = () => setQuantity((prev) => Math.max(1, prev - 1));
+
+  const handleCheckout = () => {
+    setIsCheckingOut(true);
+
+    // Simulate an API call / Payment gateway processing
+    setTimeout(() => {
+      setIsCheckingOut(false);
+      setIsCartOpen(false);
+      setCart([]); // Clear the cart
+
+      // Trigger Success Toast
+      setToastMessage(`Payment successful! Your order is on the way.`);
+      setTimeout(() => {
+        setToastMessage(null);
+      }, 4000);
+    }, 1500); // 1.5 second artificial delay
+  };
+
+  // NEW: Handle Like/Favorite
+  const handleLike = () => {
+    const product = products[activeProductIndex];
+    const newLiked = new Set(likedProducts);
+
+    if (newLiked.has(product.id)) {
+      newLiked.delete(product.id);
+      setToastMessage(`${product.title} removed from favorites!`);
+    } else {
+      newLiked.add(product.id);
+      setToastMessage(`${product.title} added to favorites! ❤️`);
+    }
+
+    setLikedProducts(newLiked);
+
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
 
   useEffect(() => {
     const preloadAllModels = async () => {
@@ -255,8 +296,19 @@ const Main = () => {
                       ${cartTotalAmount.toFixed(2)}
                     </span>
                   </div>
-                  <button className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-md hover:shadow-lg">
-                    Proceed to Checkout
+                  <button
+                    onClick={handleCheckout}
+                    disabled={isCheckingOut}
+                    className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-md hover:shadow-lg flex justify-center items-center"
+                  >
+                    {isCheckingOut ? (
+                      <>
+                        <LoadingSpinner className="w-5 h-5 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Proceed to Checkout"
+                    )}
                   </button>
                 </div>
               )}
@@ -351,13 +403,12 @@ const Main = () => {
               whileTap={!isLoading && !isAdded ? { scale: 0.98 } : {}}
               disabled={isLoading || isAdded}
               className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center transition-all duration-300 shadow-md
-                            ${
-                              isLoading
-                                ? "bg-indigo-300 text-white cursor-not-allowed"
-                                : isAdded
-                                  ? "bg-green-500 text-white shadow-green-200/50"
-                                  : "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-200/50"
-                            }`}
+                            ${isLoading
+                  ? "bg-indigo-300 text-white cursor-not-allowed"
+                  : isAdded
+                    ? "bg-green-500 text-white shadow-green-200/50"
+                    : "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-200/50"
+                }`}
             >
               {isLoading ? (
                 "Loading..."
@@ -373,12 +424,21 @@ const Main = () => {
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              onClick={handleLike}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.85 }}
               disabled={isLoading}
-              className={`bg-white text-gray-600 p-3 border border-gray-200 rounded-xl shadow-sm transition hover:bg-pink-50 hover:text-pink-500 hover:border-pink-200 ${isLoading ? "opacity-50" : ""}`}
+              animate={likedProducts.has(products[activeProductIndex].id) ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 0.3 }}
+              className={`p-3 border-2 rounded-xl shadow-sm transition-all duration-300 ${likedProducts.has(products[activeProductIndex].id)
+                  ? "bg-pink-50 border-pink-300 text-pink-500 shadow-pink-200/50"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-500"
+                } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <Heart className="w-6 h-6" />
+              <Heart
+                className="w-6 h-6"
+                fill={likedProducts.has(products[activeProductIndex].id) ? "currentColor" : "none"}
+              />
             </motion.button>
           </div>
 

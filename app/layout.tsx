@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     "Frontend Developer Portfolio",
     "React 3D",
   ],
-  authors: [{ name: "Your Name" }],
+  authors: [{ name: "Bello Muhammed" }],
   openGraph: {
     title: "Interactive 3D Product Viewer",
     description: "Experience premium products in stunning, interactive 3D.",

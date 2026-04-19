@@ -14,7 +14,6 @@ interface ProductViewerProps {
 
 const ProductViewer: React.FC<ProductViewerProps> = ({
   modelPath,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   title,
   onLoaded,
 }) => {
@@ -28,7 +27,6 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadProgress, setLoadProgress] = useState(0);
-  const [statusText, setStatusText] = useState("Preparing"); // NEW: Better UX text
 
   const initScene = () => {
     if (!mountRef.current || sceneRef.current) return;
@@ -54,10 +52,11 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
       mountRef.current.clientWidth,
       mountRef.current.clientHeight,
     );
-    rendererRef.current.toneMapping = THREE.ACESFilmicToneMapping;
+    rendererRef.current.toneMapping = THREE.ACESFilmicToneMapping; // Cinematic color grading
     rendererRef.current.toneMappingExposure = 1.0;
     mountRef.current.appendChild(rendererRef.current.domElement);
 
+    // Professional Studio Lighting (RoomEnvironment)
     const pmremGenerator = new THREE.PMREMGenerator(rendererRef.current);
     sceneRef.current.environment = pmremGenerator.fromScene(
       new RoomEnvironment(),
@@ -73,37 +72,29 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
     controlsRef.current.dampingFactor = 0.05;
     controlsRef.current.autoRotate = true;
     controlsRef.current.autoRotateSpeed = 2.0;
-    controlsRef.current.enableZoom = false;
+    controlsRef.current.enableZoom = false; // Prevents annoying page scroll on mobile
   };
 
   const loadModel = async () => {
     if (!sceneRef.current) return;
 
-    // Track last update to throttle React renders
-    let lastProgressUpdate = 0;
-
     try {
-      setStatusText("Downloading");
       const model = await getCachedModel(modelPath, (xhr) => {
         if (xhr.lengthComputable && xhr.total > 0) {
-          const percentComplete = Math.round((xhr.loaded / xhr.total) * 100);
-
-          // THROTTLE: Only update React state every 5% to prevent freezing the main thread
-          if (percentComplete - lastProgressUpdate >= 5 || percentComplete > 98) {
-            setLoadProgress(Math.min(percentComplete, 99));
-            lastProgressUpdate = percentComplete;
+          //   setLoadProgress((xhr.loaded / xhr.total) * 100);
+          const percentComplete = (xhr.loaded / xhr.total) * 100;
+          if (percentComplete > 100) {
+            setLoadProgress(99);
+          } else {
+            setLoadProgress(percentComplete);
           }
-
-          // UX FIX: Inform user that download is done, now we are parsing DRACO
-          if (percentComplete >= 99) {
-            setStatusText("Processing 3D Data");
-          }
+        } else {
+          setLoadProgress((prev) => Math.min(prev + 5, 99));
         }
       });
 
       if (modelRef.current) {
         sceneRef.current.remove(modelRef.current);
-        // We DO NOT dispose geometries here because they are shared in the global cache.
       }
 
       const box = new THREE.Box3().setFromObject(model);
@@ -123,13 +114,14 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
     } catch (error) {
       console.error("Failed to load model:", error);
       setIsLoading(false);
-      setStatusText("Failed to load");
     }
   };
 
   const animate = () => {
     if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
+
     if (controlsRef.current) controlsRef.current.update();
+
     rendererRef.current.render(sceneRef.current, cameraRef.current);
     animationRef.current = requestAnimationFrame(animate);
   };
@@ -153,8 +145,20 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
       window.removeEventListener("resize", handleResize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
 
-      // SENIOR FIX: Removed the massive geometry/material dispose loop here.
-      // Because we are using modelCache.ts, those materials must stay alive in memory.
+      if (sceneRef.current) {
+        sceneRef.current.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+              if (Array.isArray(object.material)) {
+                object.material.forEach((m) => m.dispose());
+              } else {
+                object.material.dispose();
+              }
+            }
+          }
+        });
+      }
 
       if (rendererRef.current) {
         rendererRef.current.dispose();
@@ -195,7 +199,9 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
         >
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
           <p className="text-indigo-900 font-semibold animate-pulse">
-            {statusText}... {loadProgress > 0 && `${loadProgress}%`}
+            {loadProgress > 0
+              ? `Loading ${title}... ${Math.round(loadProgress)}%`
+              : `Preparing ${title}...`}
           </p>
         </div>
       )}

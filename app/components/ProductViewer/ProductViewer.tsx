@@ -5,6 +5,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { motion } from "framer-motion";
 import { getCachedModel } from "@/app/utils/modelCache";
+import { getRandomFact, LOADING_MESSAGES } from "@/app/utils/loadingFacts";
 
 interface ProductViewerProps {
   modelPath: string;
@@ -29,6 +30,8 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [loadProgress, setLoadProgress] = useState(0);
   const [statusText, setStatusText] = useState("Preparing"); // NEW: Better UX text
+  const [currentFact, setCurrentFact] = useState<string>("");
+  const factTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const initScene = () => {
     if (!mountRef.current || sceneRef.current) return;
@@ -79,11 +82,20 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
   const loadModel = async () => {
     if (!sceneRef.current) return;
 
+    // Set a random fact at the start of loading
+    setCurrentFact(getRandomFact());
+
+    // Start rotating facts every 5 seconds (user can hover to see different fact)
+    if (factTimerRef.current) clearInterval(factTimerRef.current);
+    factTimerRef.current = setInterval(() => {
+      setCurrentFact(getRandomFact());
+    }, 5000);
+
     // Track last update to throttle React renders
     let lastProgressUpdate = 0;
 
     try {
-      setStatusText("Downloading");
+      setStatusText(LOADING_MESSAGES.downloading);
       const model = await getCachedModel(modelPath, (xhr) => {
         if (xhr.lengthComputable && xhr.total > 0) {
           const percentComplete = Math.round((xhr.loaded / xhr.total) * 100);
@@ -96,10 +108,12 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
 
           // UX FIX: Inform user that download is done, now we are parsing DRACO
           if (percentComplete >= 99) {
-            setStatusText("Processing 3D Data");
+            setStatusText(LOADING_MESSAGES.decompressing);
           }
         }
       });
+
+      setStatusText(LOADING_MESSAGES.processing);
 
       if (modelRef.current) {
         sceneRef.current.remove(modelRef.current);
@@ -118,10 +132,14 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
       sceneRef.current.add(model);
       modelRef.current = model;
 
+      // Clean up the fact timer
+      if (factTimerRef.current) clearInterval(factTimerRef.current);
+
       setIsLoading(false);
       if (onLoaded) onLoaded();
     } catch (error) {
       console.error("Failed to load model:", error);
+      if (factTimerRef.current) clearInterval(factTimerRef.current);
       setIsLoading(false);
       setStatusText("Failed to load");
     }
@@ -152,6 +170,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
     return () => {
       window.removeEventListener("resize", handleResize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (factTimerRef.current) clearInterval(factTimerRef.current);
 
       // SENIOR FIX: Removed the massive geometry/material dispose loop here.
       // Because we are using modelCache.ts, those materials must stay alive in memory.
@@ -191,12 +210,40 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
         <div
           role="status"
           aria-live="polite"
-          className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 z-10 backdrop-blur-sm"
+          className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-white via-indigo-50 to-white/90 z-10 backdrop-blur-sm"
         >
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
-          <p className="text-indigo-900 font-semibold animate-pulse">
-            {statusText}... {loadProgress > 0 && `${loadProgress}%`}
-          </p>
+          <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-8" />
+
+          <div className="text-center max-w-sm px-6">
+            <p className="text-indigo-900 font-semibold text-lg mb-2">
+              {statusText}...
+            </p>
+            {loadProgress > 0 && (
+              <div className="mb-6">
+                <div className="w-full bg-indigo-200 rounded-full h-2 mb-2">
+                  <div
+                    className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${loadProgress}%` }}
+                  />
+                </div>
+                <p className="text-indigo-700 text-sm font-medium">{loadProgress}% complete</p>
+              </div>
+            )}
+
+            {currentFact && (
+              <motion.div
+                key={currentFact}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.5 }}
+                className="bg-white/80 rounded-lg p-4 mt-6 b shadow-md hover:shadow-lg transition-shadow"
+              >
+                <p className="text-indigo-900 text-sm leading-relaxed">{currentFact}</p>
+                <p className="text-indigo-500 text-xs mt-3 font-medium">💡 Tip: Refreshing in 5 seconds...</p>
+              </motion.div>
+            )}
+          </div>
         </div>
       )}
     </div>

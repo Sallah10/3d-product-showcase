@@ -90,9 +90,9 @@ guaranteed visual fidelity.
 
 ## 📝 Credits
 
-- 3D models are sample assets used for demonstration (`red_snickers`, `sport_watch`, `blue_hills`).
+- The 3D models (`red_snickers`, `sport_watch`, `blue_hills`) are third-party demo assets downloaded from [Sketchfab](https://sketchfab.com/) and are used here for demonstration only. They keep whatever license applies on their original Sketchfab pages.
 - Built with [Three.js](https://threejs.org/), [Next.js](https://nextjs.org/), [Tailwind CSS](https://tailwindcss.com/), and [Framer Motion](https://motion.dev/).
 
 ## © License
 
-For demonstration / portfolio purposes. Contact the author before using commercially.
+The **code** in this repository is licensed under the [MIT License](LICENSE). The 3D model files under `public/models/` are **not** covered by that license — they are third-party assets from [Sketchfab](https://sketchfab.com/) included for demonstration purposes.

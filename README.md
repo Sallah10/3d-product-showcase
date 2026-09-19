@@ -2,7 +2,7 @@
 
 An interactive, real-time **3D product viewer** for e-commerce, built on the WebGL engine [Three.js](https://threejs.org/) inside a [Next.js](https://nextjs.org/) (App Router) application. Drag to rotate, swipe between products, and add them to a cart — all rendered in the browser with compressed, cached 3D models.
 
-![3DProductShowcase](https://github.com/user-attachments/assets/b81d474e-8c1c-42ba-bef7-e13798bebf39)
+![3D Product Showcase - live demo](https://github.com/user-attachments/assets/eae23c37-e47c-40dc-964b-4de13548a9a4)
 
 ## ✨ Features
 

@@ -4,6 +4,8 @@ An interactive, real-time **3D product viewer** for e-commerce, built on the Web
 
 ![3D Product Showcase - live demo](https://github.com/user-attachments/assets/eae23c37-e47c-40dc-964b-4de13548a9a4)
 
+![3DProductShowcase](https://github.com/user-attachments/assets/b81d474e-8c1c-42ba-bef7-e13798bebf39)
+
 ## ✨ Features
 
 - **Real-time 3D rendering** – Physically-based materials with an image-based lighting environment (PMREM + `RoomEnvironment`), ACES filmic tone mapping, and auto-rotation via `OrbitControls`.

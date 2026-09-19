@@ -88,7 +88,7 @@ guaranteed visual fidelity.
 
 ## 📝 Credits
 
-- 3D models are sample assets used for demonstration (`red_snickers`, `sport_watch`, `blue_hills`). _(Add attribution / links to the model sources here before shipping.)_
+- 3D models are sample assets used for demonstration (`red_snickers`, `sport_watch`, `blue_hills`).
 - Built with [Three.js](https://threejs.org/), [Next.js](https://nextjs.org/), [Tailwind CSS](https://tailwindcss.com/), and [Framer Motion](https://motion.dev/).
 
 ## © License

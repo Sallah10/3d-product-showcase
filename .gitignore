@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local interview prep notes (never commit these)
+/PROJECT_EXPLAINER.md

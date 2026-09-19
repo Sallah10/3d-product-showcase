@@ -6,14 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
-    "@types/lodash.debounce": "^4.0.9",
     "framer-motion": "^12.15.0",
-    "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.510.0",
-    "next": "^15.5.12",
+    "next": "^16.3.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "three": "^0.176.0"
@@ -26,7 +24,7 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.176.0",
     "eslint": "^9",
-    "eslint-config-next": "15.3.2",
+    "eslint-config-next": "16.3.5",
     "tailwindcss": "^4.1.6",
     "typescript": "^5"
   }

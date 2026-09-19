@@ -4,19 +4,17 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { motion } from "framer-motion";
+import { Play, Pause } from "lucide-react";
 import { getCachedModel } from "@/app/utils/modelCache";
 import { getRandomFact, LOADING_MESSAGES } from "@/app/utils/loadingFacts";
 
 interface ProductViewerProps {
   modelPath: string;
-  title: string;
   onLoaded?: () => void;
 }
 
 const ProductViewer: React.FC<ProductViewerProps> = ({
   modelPath,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  title,
   onLoaded,
 }) => {
   const mountRef = useRef<HTMLDivElement | null>(null);
@@ -31,6 +29,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
   const [loadProgress, setLoadProgress] = useState(0);
   const [statusText, setStatusText] = useState("Preparing"); // NEW: Better UX text
   const [currentFact, setCurrentFact] = useState<string>("");
+  const [isAutoRotating, setIsAutoRotating] = useState(true);
   const factTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const initScene = () => {
@@ -68,15 +67,25 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
     ).texture;
     pmremGenerator.dispose();
 
+    // Safety net lights: guarantees the model is never pitch-black even if the
+    // environment probe above somehow fails or is replaced.
+    sceneRef.current.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2);
+    keyLight.position.set(3, 4, 5);
+    sceneRef.current.add(keyLight);
+
     controlsRef.current = new OrbitControls(
       cameraRef.current,
       rendererRef.current.domElement,
     );
     controlsRef.current.enableDamping = true;
     controlsRef.current.dampingFactor = 0.05;
+    controlsRef.current.enableZoom = true;
+    controlsRef.current.enablePan = true;
+    controlsRef.current.minDistance = 1.5;
+    controlsRef.current.maxDistance = 8;
     controlsRef.current.autoRotate = true;
-    controlsRef.current.autoRotateSpeed = 2.0;
-    controlsRef.current.enableZoom = false;
+    controlsRef.current.autoRotateSpeed = 1.5;
   };
 
   const loadModel = async () => {
@@ -162,13 +171,31 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
     rendererRef.current.setSize(width, height);
   };
 
+  const toggleAutoRotate = () => {
+    const next = !isAutoRotating;
+    setIsAutoRotating(next);
+    if (controlsRef.current) controlsRef.current.autoRotate = next;
+  };
+
   useEffect(() => {
     initScene();
     window.addEventListener("resize", handleResize);
     animate();
 
+    // The demo auto-rotates until the user grabs it. The moment they start
+    // any interaction, auto-rotate stays off so they can freely inspect the
+    // model (even underneath) without the view spinning away from them.
+    const controls = controlsRef.current;
+    const stopRotateOnInteraction = () => {
+      if (!controlsRef.current) return;
+      controlsRef.current.autoRotate = false;
+      setIsAutoRotating(false);
+    };
+    controls?.addEventListener("start", stopRotateOnInteraction);
+
     return () => {
       window.removeEventListener("resize", handleResize);
+      controls?.removeEventListener("start", stopRotateOnInteraction);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       if (factTimerRef.current) clearInterval(factTimerRef.current);
 
@@ -206,6 +233,22 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
         ref={mountRef}
       />
 
+      {!isLoading && (
+        <button
+          onClick={toggleAutoRotate}
+          className="absolute top-3 right-3 z-20 p-2 rounded-full bg-white/80 shadow-md backdrop-blur-sm hover:bg-white text-indigo-700 transition"
+          aria-label={
+            isAutoRotating ? "Pause auto-rotate" : "Play auto-rotate"
+          }
+        >
+          {isAutoRotating ? (
+            <Pause className="w-4 h-4" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+        </button>
+      )}
+
       {isLoading && (
         <div
           role="status"
@@ -237,7 +280,7 @@ const ProductViewer: React.FC<ProductViewerProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white/80 rounded-lg p-4 mt-6 b shadow-md hover:shadow-lg transition-shadow"
+                className="bg-white/80 rounded-lg p-4 mt-6 shadow-md hover:shadow-lg transition-shadow"
               >
                 <p className="text-indigo-900 text-sm leading-relaxed">{currentFact}</p>
                 <p className="text-indigo-500 text-xs mt-3 font-medium">💡 Tip: Refreshing in 5 seconds...</p>

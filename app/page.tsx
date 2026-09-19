@@ -1,14 +1,9 @@
-import Main from "./components/Main/page";
+import Main from "./components/Main/Main";
 
 export default function Home() {
-
   return (
-    <>
-      {/* flex flex-col items-center w-full bg-gradient-to-b from-blue-50 to-indigo-100 */}
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100">
-        {/* Main component */}
-        <Main />
-      </div>
-    </>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100">
+      <Main />
+    </div>
   );
 }

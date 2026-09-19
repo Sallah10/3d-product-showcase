@@ -30,8 +30,6 @@ const Main = () => {
   const [activeProductIndex, setActiveProductIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [preloadedModels, setPreloadedModels] = useState<boolean[]>([]);
 
   // E-commerce State
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -85,23 +83,14 @@ const Main = () => {
     }, 3000);
   };
 
+  // Warm the cache for the NEXT product only. The active model is loaded by the
+  // viewer itself, so switching products feels instant without paying for a
+  // 3-model parallel download on first visit.
   useEffect(() => {
-    const preloadAllModels = async () => {
-      const loadedStatus = await Promise.all(
-        products.map(async (product) => {
-          try {
-            await getCachedModel(product.modelPath);
-            return true;
-          } catch {
-            return false;
-          }
-        }),
-      );
-      setPreloadedModels(loadedStatus);
-      setIsLoading(false);
-    };
-    preloadAllModels();
-  }, []);
+    if (isLoading) return;
+    const nextIndex = Math.min(products.length - 1, activeProductIndex + 1);
+    getCachedModel(products[nextIndex].modelPath).catch(() => {});
+  }, [activeProductIndex, isLoading]);
 
   const handleModelChange = (newIndex: number) => {
     if (isLoading) return;
@@ -117,6 +106,7 @@ const Main = () => {
 
   const handleAddToCart = () => {
     const product = products[activeProductIndex];
+    const wasCartEmpty = cart.length === 0;
 
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
@@ -141,6 +131,13 @@ const Main = () => {
     // Trigger Animations and Toast
     setIsAdded(true);
     setToastMessage(`${quantity}x ${product.title} added to cart!`);
+
+    // The FIRST add of a session opens the cart so the user sees what
+    // happened; we don't keep forcing it open on every add.
+    if (wasCartEmpty) {
+      setIsCartOpen(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
 
     // Auto-hide after 3 seconds
     setTimeout(() => {
@@ -202,6 +199,7 @@ const Main = () => {
           }
           transition={{ duration: 0.4 }}
           className="relative p-2 rounded-full hover:bg-indigo-50 transition-colors"
+        aria-label="Open shopping cart"
         >
           <ShoppingCart className="w-6 h-6 text-indigo-800" />
           {totalCartItems > 0 && (
@@ -217,7 +215,6 @@ const Main = () => {
         </motion.button>
       </header>
 
-      {/* --- REST OF THE COMPONENT REMAINS EXACTLY THE SAME AS PREVIOUS --- */}
       {/* Shopping Cart Drawer */}
       <AnimatePresence>
         {isCartOpen && (
@@ -243,6 +240,7 @@ const Main = () => {
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="p-2 hover:bg-white rounded-full text-gray-500 hover:text-gray-800 transition"
+                  aria-label="Close cart"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -279,6 +277,7 @@ const Main = () => {
                         <button
                           onClick={() => removeFromCart(item.id)}
                           className="text-red-400 hover:text-red-600 transition"
+                          aria-label={`Remove ${item.title} from cart`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -323,7 +322,6 @@ const Main = () => {
           <div className="relative w-full lg:w-[500px] aspect-square rounded-2xl shadow-xl bg-white overflow-hidden border border-gray-100">
             <ProductViewer
               modelPath={products[activeProductIndex].modelPath}
-              title={products[activeProductIndex].title}
               onLoaded={() => setIsLoading(false)}
             />
 
@@ -334,6 +332,7 @@ const Main = () => {
                 disabled={isLoading || activeProductIndex === 0}
                 onClick={handlePrev}
                 className={`pointer-events-auto p-2 rounded-full bg-white/90 shadow-md backdrop-blur-sm ${isLoading || activeProductIndex === 0 ? "opacity-30" : "hover:bg-white text-gray-800"}`}
+                aria-label="Previous product"
               >
                 <ChevronLeft className="w-6 h-6" />
               </motion.button>
@@ -345,6 +344,7 @@ const Main = () => {
                 }
                 onClick={handleNext}
                 className={`pointer-events-auto p-2 rounded-full bg-white/90 shadow-md backdrop-blur-sm ${isLoading || activeProductIndex === products.length - 1 ? "opacity-30" : "hover:bg-white text-gray-800"}`}
+                aria-label="Next product"
               >
                 <ChevronRight className="w-6 h-6" />
               </motion.button>
@@ -358,6 +358,7 @@ const Main = () => {
                     if (!isLoading) handleModelChange(idx);
                   }}
                   disabled={isLoading}
+                  aria-label={`Show ${products[idx].title}`}
                   className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${idx === activeProductIndex ? "bg-indigo-600 w-6" : "bg-gray-300"} ${isLoading ? "opacity-50" : ""}`}
                 />
               ))}
@@ -380,6 +381,7 @@ const Main = () => {
                 onClick={decrementQuantity}
                 disabled={isLoading}
                 className="p-2 text-gray-600 hover:bg-gray-200 rounded-l-lg transition"
+                aria-label="Decrease quantity"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -390,6 +392,7 @@ const Main = () => {
                 onClick={incrementQuantity}
                 disabled={isLoading}
                 className="p-2 text-gray-600 hover:bg-gray-200 rounded-r-lg transition"
+                aria-label="Increase quantity"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -428,6 +431,7 @@ const Main = () => {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.85 }}
               disabled={isLoading}
+              aria-label={likedProducts.has(products[activeProductIndex].id) ? "Remove from favorites" : "Add to favorites"}
               animate={likedProducts.has(products[activeProductIndex].id) ? { scale: [1, 1.2, 1] } : {}}
               transition={{ duration: 0.3 }}
               className={`p-3 border-2 rounded-xl shadow-sm transition-all duration-300 ${likedProducts.has(products[activeProductIndex].id)

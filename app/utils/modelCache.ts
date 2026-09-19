@@ -3,45 +3,44 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
-const modelCache = new Map<string, THREE.Group>();
-
 const loader = new GLTFLoader();
 
-// Set up the DRACO Loader for highly optimized 3D model compression
+// DRACO decoder is self-hosted (public/draco) so we never depend on a third-party CDN.
 const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath(
-  "https://www.gstatic.com/draco/versioned/decoders/1.5.6/",
-);
+dracoLoader.setDecoderPath("/draco/");
 loader.setDRACOLoader(dracoLoader);
 
-export const getCachedModel = async (
+// Bump this whenever the model assets change. Static assets are cached by the
+// browser at the same URL, so a stale cached copy could otherwise be served.
+const ASSET_VERSION = "v3";
+
+// Store in-flight promises instead of finished scenes so two callers loading the
+// same path (e.g. a prefetch + the active viewer) never trigger a duplicate download.
+const inflight = new Map<string, Promise<THREE.Group>>();
+
+export const getCachedModel = (
   modelPath: string,
   onProgress?: (event: ProgressEvent) => void,
 ): Promise<THREE.Group> => {
-  if (modelCache.has(modelPath)) {
-    if (onProgress) {
-      onProgress({
-        loaded: 100,
-        total: 100,
-        lengthComputable: true,
-      } as ProgressEvent);
-    }
-    return modelCache.get(modelPath)!.clone();
+  const assetUrl = `${modelPath}?${ASSET_VERSION}`;
+  const existing = inflight.get(modelPath);
+  if (existing) {
+    return existing.then((model) => model.clone());
   }
 
-  return new Promise((resolve, reject) => {
+  const promise = new Promise<THREE.Group>((resolve, reject) => {
     loader.load(
-      modelPath,
-      (gltf) => {
-        const model = gltf.scene;
-        modelCache.set(modelPath, model);
-        resolve(model.clone());
-      },
+      assetUrl,
+      (gltf) => resolve(gltf.scene),
       onProgress,
       (error) => {
+        inflight.delete(modelPath);
         console.error("Error loading model:", error);
         reject(error);
       },
     );
   });
+
+  inflight.set(modelPath, promise);
+  return promise.then((model) => model.clone());
 };
